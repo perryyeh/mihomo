@@ -44,7 +44,7 @@ dns:
     - 192.168.0.1
     - 223.5.5.5
     - 119.29.29.29
-  enhanced-mode: fake-ip #如果要玩netflix，需要使用fake-ip
+  enhanced-mode: fake-ip #netflix，需要使用fake-ip
   fake-ip-range: 198.18.0.1/15
   nameserver:
     - 192.168.0.1
@@ -60,7 +60,7 @@ proxy-groups:
   - name: 🌱
     type: url-test
     interval: 60 
-    url: http://connect.rom.miui.com/generate_204
+    url: http://connect.rom.miui.com/generate_204 #url: http://www.gstatic.com/generate_204
     proxies:
       - 🌱vmess
       - 🌱ss
