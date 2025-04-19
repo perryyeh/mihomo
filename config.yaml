@@ -33,9 +33,6 @@ tun:
   auto-route: true
   auto-redirect: true
   auto-detect-interface: true
-auto-redir:
-  enable: true
-  auto-route: true
 dns:
   enable: true
   ipv6: true
