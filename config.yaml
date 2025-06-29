@@ -39,13 +39,13 @@ dns:
   ipv6: true
   listen: :53
   default-nameserver:
-    - 192.168.0.1
+    - 10.0.0.1
     - 223.5.5.5
     - 119.29.29.29
   enhanced-mode: fake-ip #netflix，需要使用fake-ip
   fake-ip-range: 198.18.0.1/15
   nameserver:
-    - 192.168.0.1
+    - 10.0.0.1
     - 223.5.5.5
     - 119.29.29.29
   fallback:
