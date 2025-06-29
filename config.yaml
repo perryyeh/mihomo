@@ -1,8 +1,10 @@
-port: 7890
-socks-port: 7891
-redir-port: 7892
-tproxy-port: 7893
-mixed-port: 7894
+# 配置参考https://github.com/MetaCubeX/mihomo/blob/Meta/docs/config.yaml
+secret: '' # api访问密码
+port: 7890 # HTTP(S) 代理服务器端口
+socks-port: 7891 # SOCKS5 代理端口
+redir-port: 7892 # 透明代理端口，用于 Linux 和 MacOS
+tproxy-port: 7893 # Transparent proxy server port for Linux (TProxy TCP and TProxy UDP)
+mixed-port: 7894 # HTTP(S) 和 SOCKS 代理混合端口
 routing-mark: 777
 bind-address: "*"
 ipv6: true
@@ -12,7 +14,6 @@ log-level: info
 external-controller: :9090
 external-ui: ui
 external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
-secret: ''
 geodata-loader: standard
 geo-auto-update: true
 geo-update-interval: 24
@@ -75,9 +76,9 @@ rules:
 # LAN
   - DOMAIN-SUFFIX,local,DIRECT
   - IP-CIDR,127.0.0.0/8,DIRECT
-#   - IP-CIDR,172.16.0.0/12,DIRECT
-#   - IP-CIDR,192.168.0.0/16,DIRECT
-#   - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
 
 # 最终规则（除了中国区的IP之外的，全部漏网之鱼）
   - GEOIP,CN,DIRECT
