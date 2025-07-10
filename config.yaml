@@ -29,7 +29,7 @@ tcp-concurrent: true
 global-client-fingerprint: random
 tun:
   enable: true
-  stack: system
+  stack: gVisor
   udp-timeout: 300
   auto-route: true
   auto-redirect: true
