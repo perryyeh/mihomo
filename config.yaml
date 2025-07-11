@@ -39,15 +39,28 @@ dns:
   ipv6: true
   listen: :53
   default-nameserver:
+    - tls://223.5.5.5:853
+    - tls://1.12.12.12:853
     - 10.0.0.1
-    - 223.5.5.5
-    - 119.29.29.29
-  enhanced-mode: fake-ip #netflix，需要使用fake-ip
-  fake-ip-range: 198.18.0.1/15
+  enhanced-mode: fake-ip #方便静态路由
+  fake-ip-range: 198.18.0.1/15 #fake-ip池
+  # 配置不使用 fake-ip 的域名
+  fake-ip-filter:
+    - '*.lan'
+    - localhost.ptlogin2.qq.com
+    # fakeip-filter 为 rule-providers 中的名为 fakeip-filter 规则订阅，
+    # 且 behavior 必须为 domain/classical，当为 classical 时仅会生效域名类规则
+    - rule-set: fakeip-filter
+    # fakeip-filter 为 geosite 中名为 fakeip-filter 的分类（需要自行保证该分类存在）
+    - geosite: fakeip-filter
+    # 配置fake-ip-filter的匹配模式，默认为blacklist，即如果匹配成功不返回fake-ip
+    # 可设置为whitelist，即只有匹配成功才返回fake-ip
+  fake-ip-filter-mode: blacklist
+  respect-rules: false
   nameserver:
+    - tls://223.5.5.5:853
+    - tls://1.12.12.12:853
     - 10.0.0.1
-    - 223.5.5.5
-    - 119.29.29.29
   fallback:
     - 1.1.1.1
     - 8.8.8.8
