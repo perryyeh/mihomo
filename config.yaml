@@ -43,7 +43,7 @@ dns:
     - tls://1.12.12.12:853
     - 10.0.0.1
   enhanced-mode: fake-ip #方便静态路由
-  fake-ip-range: 198.18.0.1/15 #fake-ip池
+  fake-ip-range: 198.18.0.1/16 #fake-ip池
   # 配置不使用 fake-ip 的域名
   fake-ip-filter:
     - '*.lan'
