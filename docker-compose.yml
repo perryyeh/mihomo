@@ -7,6 +7,8 @@ services:
 
     networks:
       macvlan:
+        external: true
+        name: ${macvlan_name}
         ipv4_address: ${mihomo4}
         ipv6_address: ${mihomo6}
 
