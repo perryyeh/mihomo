@@ -1,31 +1,18 @@
 services:
   mihomo:
+    # 你仓库原来用什么镜像就保留什么，这里只演示
+    image: metacubex/mihomo:latest
     container_name: mihomo
     hostname: mihomo
-    image: metacubex/mihomo
     restart: always
-
+    mac_address: ${mihomomac}
     networks:
       macvlan:
         ipv4_address: ${mihomo4}
-        ipv6_address: ${mihomo6}
-
-    mac_address: ${mihomomac}
-
-    sysctls:
-      net.ipv6.conf.all.disable_ipv6: "0"
-      net.ipv6.conf.default.disable_ipv6: "0"
-
-    devices:
-      - /dev/net/tun:/dev/net/tun
-
-    cap_add:
-      - NET_ADMIN
-
     volumes:
-      - ${dockerapps}/mihomo:/root/.config/mihomo
+      - ./:/root/.config/mihomo
 
 networks:
   macvlan:
     external: true
-    name: ${macvlan_name}
+    name: ${MACVLAN_NET}
