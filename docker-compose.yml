@@ -9,10 +9,10 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
+    mac_address: ${mihomomac}
     networks:
       macvlan:
         ipv4_address: ${mihomo4}
-        mac_address: ${mihomomac}
     volumes:
       - ./:/root/.config/mihomo
 
