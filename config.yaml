@@ -47,7 +47,6 @@ dns:
   # 配置不使用 fake-ip 的域名
   fake-ip-filter:
     - '*.lan'
-    - localhost.ptlogin2.qq.com
     # fakeip-filter 为 rule-providers 中的名为 fakeip-filter 规则订阅，
     # 且 behavior 必须为 domain/classical，当为 classical 时仅会生效域名类规则
     # - rule-set: fakeip-filter
@@ -75,11 +74,6 @@ proxy-groups:
     proxies:
       - vmess
       - ss
-  - name: 🤖 ai
-    type: select
-    proxies:
-      - DIRECT
-      - 🐟 漏网之鱼
 rules:
 # LAN
   - DOMAIN-SUFFIX,local,DIRECT
