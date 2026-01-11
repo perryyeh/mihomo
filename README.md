@@ -1,3 +1,3 @@
 # mihomo
 
-fork from https://haoel.github.io/
+build for armbian
