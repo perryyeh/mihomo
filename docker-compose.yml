@@ -12,10 +12,7 @@ services:
     networks:
       macvlan:
         ipv4_address: ${mihomo4}
-    environment:
-      - TZ=Asia/Shanghai
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ./:/root/.config/mihomo
 
 networks:
