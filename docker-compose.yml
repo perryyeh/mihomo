@@ -1,6 +1,5 @@
 services:
   mihomo:
-    # 你仓库原来用什么镜像就保留什么，这里只演示
     image: metacubex/mihomo:latest
     container_name: mihomo
     hostname: mihomo
@@ -13,7 +12,10 @@ services:
     networks:
       macvlan:
         ipv4_address: ${mihomo4}
+    environment:
+      - TZ=Asia/Shanghai
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ./:/root/.config/mihomo
 
 networks:
