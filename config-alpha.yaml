@@ -40,30 +40,21 @@ dns:
   listen: '[::]:53'
   enhanced-mode: fake-ip #方便静态路由
   fake-ip-range: 198.18.0.1/15 #fake-ip池
-  fake-ip-filter-mode: blacklist #即将准备支持rule 模式精确分配
-  fake-ip-filter: # 配置不使用 fake-ip 的域名
-    - '*.lan'
-    # - GEOSITE,google-cn,fake-ip # 代理国行 Google 服务 API 与 AMP CDN
-    # - GEOSITE,private,real-ip
-    # - GEOSITE,category-ntp,real-ip
-    # - GEOSITE,connectivity-check,real-ip
-    # - GEOSITE,china-list,real-ip
-    # - MATCH,fake-ip
-  # nameserver: [system]
-  # nameserver-policy:
-  #   GEOSITE:private,category-ntp,connectivity-check,china-list: system
-  #   +: 8.8.8.8#代理节点 # 如节点不支持 UDP 改为 rcode://refused 屏蔽
-  default-nameserver:
-    - 10.0.0.1
-    - tls://223.5.5.5:853
-    - tls://1.12.12.12:853
+  fake-ip-filter-mode: rule #rule 模式精确分配
+  fake-ip-filter: # 配置fike ip域名
+    - GEOSITE,google-cn,fake-ip # 代理国行 Google 服务 API 与 AMP CDN
+    - GEOSITE,private,real-ip
+    - GEOSITE,category-ntp,real-ip
+    - GEOSITE,connectivity-check,real-ip
+    - GEOSITE,china-list,real-ip
+    - MATCH,fake-ip
   nameserver:
     - 10.0.0.1
     - tls://223.5.5.5:853
     - tls://1.12.12.12:853
-  fallback:
+  nameserver-policy:
+    - GEOSITE:private,category-ntp,connectivity-check,china-list: system
     - 1.1.1.1
-    - 8.8.8.8
 proxies:
   - {name: vmess, type: vmess, server: domain.com, port: 20000, uuid: uuid8, cipher: auto, alterId: 0, tls: true, skip-cert-verify: true, network: ws, udp: true, "ws-opts": {path: "/", headers: {Host: "speedtest.domain.com"}}}
   - {name: ss, type: ss, server: domain.com, port: 30000, password: password8, cipher: chacha20-ietf-poly1305}
@@ -88,6 +79,6 @@ rules:
   - GEOSITE,private,DIRECT
   - GEOSITE,china-list,DIRECT
   - GEOIP,private,DIRECT,no-resolve
-  - GEOIP,cn,DIRECT,no-resolve # 添加 no-resolve 不对未知域名进行 GeoIP 分流，不进行二次解析
+  - GEOIP,cn,DIRECT,no-resolve
 # 最终规则（除了中国区的IP之外的，全部漏网之鱼）
   - MATCH,🐟 漏网之鱼
