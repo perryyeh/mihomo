@@ -1,12 +1,12 @@
 secret: 'admin' # api访问密码
-log-level: info
+log-level: debug
 bind-address: "*"
 allow-lan: true
 ipv6: true
 profile:
   store-selected: true
   store-fake-ip: true
-external-controller: '[::]:9090'
+external-controller: :9090
 external-ui: ui
 external-ui-url: "https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
 geodata-loader: standard
@@ -15,11 +15,12 @@ geo-auto-update: true
 geo-update-interval: 24
 geox-url:
   geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
-  geosite: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  geosite: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
 mode: rule
 unified-delay: true
 tcp-concurrent: true
-global-client-fingerprint: random
+client-fingerprint: random
 routing-mark: 777
 port: 7890 # HTTP(S) 代理服务器端口
 socks-port: 7891 # SOCKS5 代理端口
@@ -33,15 +34,16 @@ tun:
   auto-route: true
   auto-redirect: true
   auto-detect-interface: true
+  route-exclude-address:
+    - ::/0
 dns:
   enable: true
   ipv6: true
   respect-rules: false
-  listen: '[::]:53'
+  listen: :53
   enhanced-mode: fake-ip #方便静态路由
   fake-ip-range: 198.18.0.1/15 #fake-ip池
-  fake-ip-filter-mode: rule #rule 模式精确分配
-  fake-ip-filter: # 配置fike ip域名
+  fake-ip-filter:
     - GEOSITE,google-cn,fake-ip # 代理国行 Google 服务 API 与 AMP CDN
     - GEOSITE,private,real-ip
     - GEOSITE,category-ntp,real-ip
@@ -53,32 +55,32 @@ dns:
     - tls://223.5.5.5:853
     - tls://1.12.12.12:853
   nameserver-policy:
-    - GEOSITE:private,category-ntp,connectivity-check,china-list: system
-    - 1.1.1.1
+    GEOSITE:private,category-ntp,connectivity-check,cn: system
+    GEOSITE:geolocation-!cn: 8.8.8.8
 proxies:
   - {name: vmess, type: vmess, server: domain.com, port: 20000, uuid: uuid8, cipher: auto, alterId: 0, tls: true, skip-cert-verify: true, network: ws, udp: true, "ws-opts": {path: "/", headers: {Host: "speedtest.domain.com"}}}
   - {name: ss, type: ss, server: domain.com, port: 30000, password: password8, cipher: chacha20-ietf-poly1305}
 proxy-groups:
   - name: 🐟 漏网之鱼
     type: url-test
-    interval: 60 
+    interval: 60
     url: http://www.gstatic.com/generate_204
     proxies:
       - vmess
       - ss
 rules:
-# LAN
+  # LAN
   - DOMAIN-SUFFIX,local,DIRECT
   - IP-CIDR,127.0.0.0/8,DIRECT
   - IP-CIDR,172.16.0.0/12,DIRECT
   - IP-CIDR,192.168.0.0/16,DIRECT
   - IP-CIDR,10.0.0.0/8,DIRECT
-# 其他
+  # 其他
   - GEOSITE,apple-update,DIRECT
   - GEOSITE,win-update,DIRECT
   - GEOSITE,private,DIRECT
-  - GEOSITE,china-list,DIRECT
+  - GEOSITE,cn,DIRECT
   - GEOIP,private,DIRECT,no-resolve
   - GEOIP,cn,DIRECT,no-resolve
-# 最终规则（除了中国区的IP之外的，全部漏网之鱼）
+  # 最终规则（除了中国区的IP之外的，全部漏网之鱼）
   - MATCH,🐟 漏网之鱼
