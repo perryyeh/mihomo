@@ -1,5 +1,0 @@
-services:
-  mihomo:
-    networks:
-      macvlan:
-        ipv6_address: ${mihomo6}
