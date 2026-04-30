@@ -1,0 +1,43 @@
+secret: 'admin' # api访问密码
+log-level: debug
+bind-address: "*"
+allow-lan: true
+ipv6: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+external-controller: :9090
+external-ui: ui
+external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+geodata-loader: standard
+geodata-mode: true
+geo-auto-update: true
+geo-update-interval: 24
+geox-url:
+  geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
+  geosite: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
+mode: rule
+unified-delay: true
+tcp-concurrent: true
+client-fingerprint: random
+routing-mark: 777
+port: 7890 # HTTP(S) 代理服务器端口
+socks-port: 7891 # SOCKS5 代理端口
+redir-port: 7892 # 透明代理端口，用于 Linux 和 MacOS
+tproxy-port: 7893 # Transparent proxy server port for Linux (TProxy TCP and TProxy UDP)
+mixed-port: 7894 # HTTP(S) 和 SOCKS 代理混合端口
+listeners:
+  - name: ss-in
+    type: shadowsocks
+    port: 14443
+    listen: 0.0.0.0
+    cipher: chacha20-ietf-poly1305
+    password: sspassword
+    udp: true
+tun:
+  enable: false
+dns:
+  enable: false
+rules:
+  - MATCH,DIRECT
