@@ -1,0 +1,22 @@
+services:
+  mihomo:
+    image: metacubex/mihomo:latest
+    container_name: mihomo
+    hostname: mihomo
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      macvlan:
+        ipv4_address: ${ipv4}
+        ipv6_address: ${ipv6}
+        mac_address: ${macaddress}
+    volumes:
+      - ./:/root/.config/mihomo
+
+networks:
+  macvlan:
+    external: true
+    name: ${MACVLAN_NET}
