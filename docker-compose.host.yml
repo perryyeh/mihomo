@@ -9,5 +9,9 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
+    environment:
+      TZ: Asia/Singapore
     volumes:
       - ./:/root/.config/mihomo
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro

@@ -13,8 +13,12 @@ services:
         ipv4_address: ${ipv4}
         ipv6_address: ${ipv6}
         mac_address: ${macaddress}
+    environment:
+      TZ: Asia/Singapore
     volumes:
       - ./:/root/.config/mihomo
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
 networks:
   macvlan:
