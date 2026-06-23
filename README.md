@@ -73,7 +73,7 @@ For BrowserLeaks-style DNS leaks where final traffic is proxied but probe hostna
 
 - `config.host.yaml` inbound/central fallback probes should prefer a domestic URL: `http://connect.rom.miui.com/generate_204`.
 - `config.macvlan.yaml` outbound/branch url-test probes should default to `http://www.gstatic.com/generate_204`.
-- Exception: if a branch's upstream is domestic or centrally hosted in China, use the MIUI URL for that branch deployment, as with tx/tv using the SH upstream.
+- Exception: if a branch's upstream is domestic or centrally hosted in China, use the MIUI URL for that branch deployment.
 
 ## QUIC / HTTP/3 blocking note
 
