@@ -43,6 +43,32 @@ dns:
 
 This is enough for mihomo to generate and route IPv6 fake-ip answers when the surrounding router/site policy intercepts `fd00:6152:0:9::/64` toward the mihomo instance.
 
+## DNS / leak responsibility
+
+- mihomo does not own upstream domain classification if mosdns is deployed in front of it; mosdns should decide direct/proxy/fake-ip classification.
+- mihomo should still control:
+  - UDP 443 / QUIC behavior.
+  - WebRTC / STUN / TURN exposure where rules apply.
+  - Its own DNS upstreams so proxied connections do not resolve through local ISP DNS unintentionally.
+- When DNS can return fake-ip, do not leave fake-ip CIDRs falling through to plain `DIRECT`; route them to the intended upstream group.
+
+## Template/runtime convention
+
+- Template config uses placeholder gateway values such as `10.0.0.1`.
+- Runtime config may need the real LAN gateway for the deployment site.
+- Do not copy live secrets, real nodes, UUIDs, passwords, tokens, or dashboard secrets back into this public template repo.
+- When syncing runtime fixes back to templates, prefer minimal section-level changes such as DNS/TUN/rules blocks; do not overwrite live node/proxy-group data into the repo.
+
+## DNS leak fix pattern
+
+For BrowserLeaks-style DNS leaks where final traffic is proxied but probe hostnames resolve through local ISP DNS:
+
+- Ensure `respect-rules: true` is enabled where applicable.
+- Keep bootstrap/direct-side resolver behavior separate from proxied-domain resolver behavior.
+- Use encrypted or proxied upstreams for overseas/proxy lookups as appropriate for the deployment.
+- Keep domestic resolvers limited to direct/bootstrap use cases.
+- Verify with logs that probe domains no longer hit local gateway/plain UDP DNS unexpectedly.
+
 ## Probe URL convention
 
 - `config.host.yaml` inbound/central fallback probes should prefer a domestic URL: `http://connect.rom.miui.com/generate_204`.
