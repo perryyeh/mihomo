@@ -30,6 +30,19 @@ Both compose templates set `TZ: Asia/Singapore` and mount the host timezone file
 
 Branch `config.macvlan.yaml` uses fake-ip for transparent routing. A central inbound `config.host.yaml` may receive connections whose resolved remote destination is in `198.18.0.0/15`; those addresses are fake-ip targets and must not be sent to `DIRECT`. Route `198.18.0.0/15` to the selected upstream group instead.
 
+For branch-site IPv6 fake-ip, `config.macvlan.yaml` enables a TUN IPv6 address and the IPv6 fake-ip pool:
+
+```yaml
+tun:
+  inet6-address:
+    - fdfe:dcba:9876::1/126
+
+dns:
+  fake-ip-range6: fd00:6152:0:9::/64
+```
+
+This is enough for mihomo to generate and route IPv6 fake-ip answers when the surrounding router/site policy intercepts `fd00:6152:0:9::/64` toward the mihomo instance.
+
 ## Probe URL convention
 
 - `config.host.yaml` inbound/central fallback probes should prefer a domestic URL: `http://connect.rom.miui.com/generate_204`.
