@@ -48,7 +48,7 @@ dns:
 proxies:
   - name: surge
     type: socks5
-    server: 10.0.0.120
+    server: 192.0.2.120 # example address; replace in deployment
     port: 6153
     udp: true
 
