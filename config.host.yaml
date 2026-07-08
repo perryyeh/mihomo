@@ -76,6 +76,11 @@ proxy-groups:
       - 🐟
       - DIRECT
 rules:
+  # Branch fake-ip must be handled before private ULA rules.
+  - IP-CIDR,198.18.0.0/15,GLOBAL,no-resolve
+  - IP-CIDR6,fd00:6152::1/127,DIRECT,no-resolve
+  - IP-CIDR6,fd00:6152:0:9::/64,GLOBAL,no-resolve
+
   # LAN / private / reserved
   - IP-CIDR,10.0.0.0/8,DIRECT
   - IP-CIDR,172.16.0.0/12,DIRECT
@@ -84,9 +89,6 @@ rules:
   - IP-CIDR,169.254.0.0/16,DIRECT
   - IP-CIDR6,fc00::/7,DIRECT
   - IP-CIDR6,fe80::/10,DIRECT
-
-  # Branch fake-ip must not be DIRECT.
-  - IP-CIDR,198.18.0.0/15,GLOBAL,no-resolve
 
   # CN real IP can still be direct.
   - GEOIP,CN,DIRECT
