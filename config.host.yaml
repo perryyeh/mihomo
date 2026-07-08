@@ -78,7 +78,7 @@ proxy-groups:
 rules:
   # Branch fake-ip must be handled before private ULA rules.
   - IP-CIDR,198.18.0.0/15,GLOBAL,no-resolve
-  - IP-CIDR6,fd00:6152::1/127,DIRECT,no-resolve
+  - IP-CIDR6,fd00:6152::1/127,GLOBAL,no-resolve
   - IP-CIDR6,fd00:6152:0:9::/64,GLOBAL,no-resolve
 
   # LAN / private / reserved
