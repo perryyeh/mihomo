@@ -96,8 +96,8 @@ rules:
   - IP-CIDR6,fe80::/10,DIRECT
   - IP-CIDR6,ff00::/8,DIRECT
 
-  # CN real IP can still be direct.
+  # CN
   - GEOIP,CN,DIRECT
 
-  # Everything else goes through upstream fallback.
+  # Others
   - MATCH,GLOBAL
