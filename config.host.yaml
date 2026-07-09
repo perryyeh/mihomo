@@ -83,7 +83,7 @@ rules:
 
   # LAN / private / reserved
   - DOMAIN-SUFFIX,local,DIRECT
-  - DOMAIN-SUFFIX,home.arpa,DIRECT
+  - DOMAIN-SUFFIX,arpa,DIRECT
   - IP-CIDR,127.0.0.0/8,DIRECT
   - IP-CIDR,10.0.0.0/8,DIRECT
   - IP-CIDR,172.16.0.0/12,DIRECT
