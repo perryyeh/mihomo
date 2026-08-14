@@ -38,10 +38,10 @@ tun:
     - fdfe:dcba:9876::1/126
 
 dns:
-  fake-ip-range6: fd00:6152:0:9::/64
+  fake-ip-range6: 2001:2:0:6152:0:9::/96
 ```
 
-This is enough for mihomo to generate and route IPv6 fake-ip answers when the surrounding router/site policy intercepts `fd00:6152:0:9::/64` toward the mihomo instance.
+This is enough for mihomo to generate IPv6 fake-ip answers in `2001:2:0:6152:0:9::/96`. The surrounding router/site policy should route the aggregate `2001:2:0:6152::/64` toward the mihomo instance; it also covers the VIF gateway and fake DNS addresses.
 
 ## DNS / leak responsibility
 

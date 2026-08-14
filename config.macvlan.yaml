@@ -42,7 +42,7 @@ dns:
   listen: :53
   enhanced-mode: fake-ip #方便静态路由
   fake-ip-range: 198.18.0.1/15 #fake-ip池
-  fake-ip-range6: fd00:6152:0:9::/64 #IPv6 fake-ip池
+  fake-ip-range6: 2001:2:0:6152:0:9::/96 #IPv6 fake-ip池
   respect-rules: true
   default-nameserver:
     - tls://223.5.5.5:853
@@ -95,8 +95,7 @@ rules:
 
   # Branch fake-ip must be handled before private/reserved rules.
   - IP-CIDR,198.18.0.0/15,GLOBAL,no-resolve
-  - IP-CIDR6,fd00:6152::1/127,GLOBAL,no-resolve
-  - IP-CIDR6,fd00:6152:0:9::/64,GLOBAL,no-resolve
+  - IP-CIDR6,2001:2:0:6152::/64,GLOBAL,no-resolve
 
   # LAN / private / reserved
   - DOMAIN-SUFFIX,local,DIRECT
