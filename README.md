@@ -1,36 +1,36 @@
 # mihomo
 
-Mihomo deployment templates for Armbian/dockerapps.
+用于 Armbian/dockerapps 的 Mihomo 部署模板。
 
-## Roles
+## 角色
 
-- `config.host.yaml`: inbound/central `mihomoin` style configuration. It is intended for `network_mode: host`, listens for branch-site upstream traffic, and should not run transparent TUN routing.
-- `config.macvlan.yaml`: outbound/branch-site `mihomo` style configuration. It is intended for macvlan deployment, provides DNS/fake-ip/TUN transparent routing, and uses upstream proxy nodes for non-direct traffic.
+- `config.host.yaml`：入站/中心端 `mihomoin` 风格配置。适用于 `network_mode: host`，接收分支站点的上游流量；不应启用透明 TUN 路由。
+- `config.macvlan.yaml`：出站/分支端 `mihomo` 风格配置。适用于 macvlan 部署，提供 DNS/Fake-IP/TUN 透明路由；非直连流量通过上游代理节点转发。
 
-## Compose templates
+## Compose 模板
 
-- `docker-compose.host.yml`: host-network compose template.
-- `docker-compose.macvlan.yml`: macvlan compose template using `${ipv4}`, `${ipv6}`, `${macaddress}`, and `${MACVLAN_NET}`.
+- `docker-compose.host.yml`：host 网络模式的 Compose 模板。
+- `docker-compose.macvlan.yml`：macvlan Compose 模板，使用 `${ipv4}`、`${ipv6}`、`${macaddress}` 与 `${MACVLAN_NET}`。
 
-Both compose templates set `TZ: Asia/Singapore` and mount the host timezone files read-only:
+两个 Compose 模板均设置 `TZ: Asia/Singapore`，并以只读方式挂载宿主机时区文件：
 
 ```yaml
 - /etc/localtime:/etc/localtime:ro
 - /etc/timezone:/etc/timezone:ro
 ```
 
-## Deployment convention
+## 部署约定
 
-- Do not commit a generated production `config.yaml`.
-- Copy the selected template to `config.yaml` during deployment.
-- Do not commit real proxy nodes, UUIDs, passwords, tokens, dashboard secrets, or site-specific credentials.
-- Keep real node definitions and secrets in local deployment files only.
+- 不提交运行环境生成的 `config.yaml`。
+- 部署时将选定模板复制为 `config.yaml`。
+- 不提交真实代理节点、UUID、密码、Token、面板密钥或站点专属凭据。
+- 真实节点定义与密钥只保存在本地部署文件中。
 
-## Fake-IP / `198.18.0.0/15` note
+## Fake-IP / `198.18.0.0/15` 说明
 
-Branch `config.macvlan.yaml` uses fake-ip for transparent routing. A central inbound `config.host.yaml` may receive connections whose resolved remote destination is in `198.18.0.0/15`; those addresses are fake-ip targets and must not be sent to `DIRECT`. Route `198.18.0.0/15` to the selected upstream group instead.
+分支端 `config.macvlan.yaml` 使用 Fake-IP 实现透明路由。中心入站端 `config.host.yaml` 可能收到远端已解析为 `198.18.0.0/15` 的连接；这类地址是 Fake-IP 目标，不能走 `DIRECT`，应改为路由至选定的上游策略组。
 
-For branch-site IPv6 fake-ip, `config.macvlan.yaml` enables a TUN IPv6 address and the IPv6 fake-ip pool:
+分支端 IPv6 Fake-IP 中，`config.macvlan.yaml` 会启用 TUN IPv6 地址及 IPv6 Fake-IP 池：
 
 ```yaml
 tun:
@@ -41,46 +41,46 @@ dns:
   fake-ip-range6: 2001:2:0:6152:0:9::/96
 ```
 
-This is enough for mihomo to generate IPv6 fake-ip answers in `2001:2:0:6152:0:9::/96`. The surrounding router/site policy should route the aggregate `2001:2:0:6152::/64` toward the mihomo instance; it also covers the VIF gateway and fake DNS addresses.
+Mihomo 会从 `2001:2:0:6152:0:9::/96` 生成 IPv6 Fake-IP 应答。周边路由器/站点策略应将汇总段 `2001:2:0:6152::/64` 路由至 Mihomo 实例；该汇总段同时覆盖 VIF gateway 与 Fake DNS 地址。
 
-## DNS / leak responsibility
+## DNS 与泄漏边界
 
-- mihomo does not own upstream domain classification if mosdns is deployed in front of it; mosdns should decide direct/proxy/fake-ip classification.
-- mihomo should still control:
-  - UDP 443 / QUIC behavior.
-  - WebRTC / STUN / TURN exposure where rules apply.
-  - Its own DNS upstreams so proxied connections do not resolve through local ISP DNS unintentionally.
-- When DNS can return fake-ip, do not leave fake-ip CIDRs falling through to plain `DIRECT`; route them to the intended upstream group.
+- 当前置部署 mosdns 时，mihomo 不负责上游域名分类；应由 mosdns 决定域名走直连、代理或 Fake-IP。
+- mihomo 仍应控制：
+  - UDP 443 / QUIC 行为。
+  - 规则适用范围内的 WebRTC / STUN / TURN 暴露。
+  - 自身 DNS 上游，避免代理流量意外经本地 ISP DNS 解析。
+- DNS 可能返回 Fake-IP 时，Fake-IP CIDR 不能落入普通 `DIRECT`；应路由至预期的上游策略组。
 
-## Template/runtime convention
+## 模板与运行态约定
 
-- Template config uses placeholder gateway values such as `10.0.0.1`.
-- Runtime config may need the real LAN gateway for the deployment site.
-- Do not copy live secrets, real nodes, UUIDs, passwords, tokens, or dashboard secrets back into this public template repo.
-- When syncing runtime fixes back to templates, prefer minimal section-level changes such as DNS/TUN/rules blocks; do not overwrite live node/proxy-group data into the repo.
+- 模板配置使用如 `10.0.0.1` 的占位网关地址。
+- 运行态配置可能需要替换为部署站点真实 LAN 网关。
+- 不要将真实密钥、节点、UUID、密码、Token 或面板密钥从运行态回写到此公开模板仓库。
+- 将运行态修复同步回模板时，应优先做 DNS/TUN/规则等最小节级修改；不要把运行态节点或策略组数据覆盖进仓库。
 
-## DNS leak fix pattern
+## DNS 泄漏修复模式
 
-For BrowserLeaks-style DNS leaks where final traffic is proxied but probe hostnames resolve through local ISP DNS:
+对于 BrowserLeaks 一类“最终流量已代理，但探测域名仍经本地 ISP DNS 解析”的 DNS 泄漏：
 
-- Ensure `respect-rules: true` is enabled where applicable.
-- Keep bootstrap/direct-side resolver behavior separate from proxied-domain resolver behavior.
-- Use encrypted or proxied upstreams for overseas/proxy lookups as appropriate for the deployment.
-- Keep domestic resolvers limited to direct/bootstrap use cases.
-- Verify with logs that probe domains no longer hit local gateway/plain UDP DNS unexpectedly.
+- 适用时确保启用 `respect-rules: true`。
+- 将 bootstrap/直连侧解析器与代理域名解析器分离。
+- 海外/代理域名查询按部署需要使用加密或经代理的上游。
+- 国内解析器仅用于直连或 bootstrap 场景。
+- 通过日志验证探测域名不再意外命中本地网关或明文 UDP DNS。
 
-## Probe URL convention
+## 探测 URL 约定
 
-- `config.host.yaml` inbound/central fallback probes should prefer a domestic URL: `http://connect.rom.miui.com/generate_204`.
-- `config.macvlan.yaml` outbound/branch url-test probes should default to `http://www.gstatic.com/generate_204`.
-- Exception: if a branch's upstream is domestic or centrally hosted in China, use the MIUI URL for that branch deployment.
+- `config.host.yaml` 的入站/中心端 fallback 探测应优先使用国内 URL：`http://connect.rom.miui.com/generate_204`。
+- `config.macvlan.yaml` 的出站/分支端 url-test 默认使用 `http://www.gstatic.com/generate_204`。
+- 例外：分支上游位于国内或集中部署在国内时，该分支应使用 MIUI URL。
 
-## QUIC / HTTP/3 blocking note
+## QUIC / HTTP/3 阻断说明
 
-When blocking QUIC, use a UDP-only rule:
+阻断 QUIC 时，应使用仅匹配 UDP 的规则：
 
 ```yaml
 AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
 ```
 
-Do not use a bare `DST-PORT,443,REJECT`, because that would also block normal TCP/443 HTTPS.
+不要使用裸 `DST-PORT,443,REJECT`，否则也会阻断正常的 TCP/443 HTTPS。
