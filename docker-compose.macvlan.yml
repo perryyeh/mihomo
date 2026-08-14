@@ -13,6 +13,8 @@ services:
         ipv4_address: ${ipv4}
         ipv6_address: ${ipv6}
         mac_address: ${macaddress}
+        driver_opts:
+          com.docker.network.endpoint.sysctls: net.ipv6.conf.IFNAME.accept_ra_rt_info_max_plen=128
     sysctls:
       - net.ipv6.conf.all.forwarding=1
       - net.ipv4.conf.all.forwarding=1
