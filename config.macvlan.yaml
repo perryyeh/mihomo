@@ -32,7 +32,7 @@ tun:
   stack: gVisor
   udp-timeout: 300
   auto-route: true
-  auto-redirect: true
+  auto-redirect: false
   auto-detect-interface: true
   inet6-address:
     - fdfe:dcba:9876::1/126
