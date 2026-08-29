@@ -12,7 +12,7 @@
 - `docker-compose.host.yml`：host 网络模式的 Compose 模板。
 - `docker-compose.macvlan.yml`：macvlan Compose 模板，使用 `${ipv4}`、`${ipv6}`、`${macaddress}` 与 `${MACVLAN_NET}`。
 
-两个 Compose 模板均设置 `TZ: Asia/Singapore`，并以只读方式挂载宿主机时区文件：
+两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。它们均将 `mihomo-entrypoint.sh` 注入为 PID 1；该脚本启动 Mihomo，并在存在 `config.subscription.conf` 时在容器内调度更新，不依赖宿主机 systemd/crond。
 
 ```yaml
 - /etc/localtime:/etc/localtime:ro
