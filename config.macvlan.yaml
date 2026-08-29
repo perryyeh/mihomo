@@ -8,7 +8,7 @@ profile:
   store-fake-ip: true
 external-controller: :9090
 external-ui: ui
-external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.tar.gz"
 geodata-loader: standard
 geodata-mode: true
 geo-auto-update: true

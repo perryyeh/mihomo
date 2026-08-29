@@ -23,6 +23,7 @@
 
 - 不提交运行环境生成的 `config.yaml`。
 - 部署时将选定模板复制为 `config.yaml`。
+- YehBP 安装时按选定模板的 `external-ui` 与 `external-ui-url` 下载最新 tar.gz UI 并原子写入该目录；本仓库不再提交 UI 静态文件。手动部署时需自行下载该 URL 的内容到 `external-ui` 所指定目录。
 - 不提交真实代理节点、UUID、密码、Token、面板密钥或站点专属凭据。
 - 真实节点定义与密钥只保存在本地部署文件中。
 
