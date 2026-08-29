@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: yehbp-mihomo:latest
-    entrypoint: ["/root/.config/mihomo/mihomo-entrypoint.sh"]
+    entrypoint: ["/root/.config/mihomo/entrypoint.sh"]
     container_name: mihomo
     hostname: mihomo
     restart: always

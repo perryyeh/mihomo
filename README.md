@@ -12,7 +12,7 @@
 - `docker-compose.host.yml`：host 网络模式的 Compose 模板。
 - `docker-compose.macvlan.yml`：macvlan Compose 模板，使用 `${ipv4}`、`${ipv6}`、`${macaddress}` 与 `${MACVLAN_NET}`。
 
-两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。它们均将 `mihomo-entrypoint.sh` 注入为 PID 1；该脚本启动 Mihomo，并在存在 `config.subscription.conf` 时在容器内调度更新，不依赖宿主机 systemd/crond。
+两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。它们均将 `entrypoint.sh` 注入为 PID 1；该脚本启动 Mihomo，并在存在 `config.subscription.conf` 时在容器内调度更新，不依赖宿主机 systemd/crond。
 
 ```yaml
 - /etc/localtime:/etc/localtime:ro
@@ -23,6 +23,7 @@
 
 - 不提交运行环境生成的 `config.yaml`。
 - 部署时将选定模板复制为 `config.yaml`。
+- `config.replace.yaml` 是 macvlan 完整订阅的结构化覆盖层：更新器递归覆盖其中的本地部署字段；只有上游已定义时才覆盖 `dns.fake-ip-range` 与 `dns.fake-ip-range6`，不会凭空添加这两个字段。
 - YehBP 安装时按选定模板的 `external-ui` 与 `external-ui-url` 下载最新 tar.gz UI 并原子写入该目录；本仓库不再提交 UI 静态文件。手动部署时需自行下载该 URL 的内容到 `external-ui` 所指定目录。
 - 不提交真实代理节点、UUID、密码、Token、面板密钥或站点专属凭据。
 - 真实节点定义与密钥只保存在本地部署文件中。
