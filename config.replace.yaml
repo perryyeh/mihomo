@@ -1,7 +1,7 @@
 # Overlay applied to a downloaded full Mihomo configuration subscription.
 # This deliberately contains only deployment-local values. The updater recursively
-# merges it into the subscription; dns.fake-ip-range and dns.fake-ip-range6 are
-# replaced only when the upstream configuration already defines the same key.
+# merges it into the subscription; dns.fake-ip-range6 is replaced only when the
+# upstream configuration already defines that key.
 secret: 'admin' # CHANGE-ME: api访问密码
 bind-address: "*"
 allow-lan: true
