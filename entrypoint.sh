@@ -18,10 +18,12 @@ interval_seconds() {
   local hours
   [ -r "$SUBSCRIPTION_CONF" ] || return 1
   hours="$(sed -n 's/^INTERVAL_HOURS=//p' "$SUBSCRIPTION_CONF" | sed -n '1p')"
+  # A missing/non-numeric value, or 0 and any negative value, disables the
+  # internal schedule. Manual updates still work through YehBP menu 21.
   case "$hours" in
     ''|*[!0-9]*) return 1 ;;
   esac
-  [ "$hours" -ge 1 ] && [ "$hours" -le 23 ] || return 1
+  [ "$hours" -lt 1 ] && return 1
   printf '%s\n' "$((hours * 3600))"
 }
 
