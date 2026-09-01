@@ -4,7 +4,7 @@
 set -u
 
 APP_DIR=/root/.config/mihomo
-UPDATE_SCRIPT="$APP_DIR/subscription.update.sh"
+UPDATE_SCRIPT="$APP_DIR/subscription.sh"
 SUBSCRIPTION_CONF="$APP_DIR/subscription.conf"
 RELOAD_REQUEST="$APP_DIR/.subscription.reload.request"
 RELOAD_DONE="$APP_DIR/.subscription.reload.done"

@@ -12,7 +12,7 @@
 - `docker-compose.host.yml`：host 网络模式的 Compose 模板。
 - `docker-compose.macvlan.yml`：macvlan Compose 模板，使用 `${ipv4}`、`${ipv6}`、`${macaddress}` 与 `${MACVLAN_NET}`。
 
-两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。`subscription.update.sh` 是与 `config.yaml` 平级、持续保留的订阅下载/校验/发布更新器；两个 Compose 模板均将 `entrypoint.sh` 注入为 PID 1，该脚本在存在 `subscription.conf` 时调用更新器并在容器内调度更新，不依赖宿主机 systemd/crond。
+两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。`subscription.sh` 是与 `config.yaml` 平级、持续保留的订阅下载/校验/发布更新器；两个 Compose 模板均将 `entrypoint.sh` 注入为 PID 1，该脚本在存在 `subscription.conf` 时调用更新器并在容器内调度更新，不依赖宿主机 systemd/crond。
 
 ```yaml
 - /etc/localtime:/etc/localtime:ro
