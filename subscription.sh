@@ -117,7 +117,9 @@ case "$MODE" in
     candidate="$(mktemp "$APP_DIR/.subscription-restore.XXXXXX")"
     cp "$BACKUP" "$candidate"
     if validate_and_publish "$candidate"; then
-      log_event "完成：已恢复本地 macvlan 配置并请求重载 Mihomo。"
+      if [ "$CONFIG_CHANGED" -eq 1 ]; then
+        log_event "完成：已恢复本地 macvlan 配置并请求重载 Mihomo。"
+      fi
       exit 0
     fi
     rm -f "$candidate"
@@ -242,7 +244,9 @@ PY
 fi
 
 if validate_and_publish "$candidate"; then
-  log_event "完成：订阅有效，已替换 config.yaml 并请求重载 Mihomo。"
+  if [ "$CONFIG_CHANGED" -eq 1 ]; then
+    log_event "完成：订阅有效，已替换 config.yaml 并请求重载 Mihomo。"
+  fi
   exit 0
 fi
 rm -f "$candidate"
