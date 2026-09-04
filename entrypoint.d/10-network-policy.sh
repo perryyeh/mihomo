@@ -52,8 +52,18 @@ printf '%s\n' "$records" | while IFS=' ' read -r source gateway; do
   ip route replace "$cidr" dev "$dev" src "$source" table "$table"
   ip route replace default via "$gateway" dev "$dev" table "$table"
 
-  ipv6_source="$(ip -6 -o addr show dev "$dev" scope global 2>/dev/null | awk '$4 !~ /^(fc|fd)/ {sub(/\/.*/, "", $4); print $4; exit}')"
-  ipv6_gateway="$(ip -6 route show default dev "$dev" proto ra 2>/dev/null | awk '/^default via / {print $3; exit}')"
+  # The endpoint may receive RA a few seconds after the container starts.
+  # Wait for both a public address and its RA default route before adding policy.
+  ipv6_source=""
+  ipv6_gateway=""
+  ipv6_wait=0
+  while [ "$ipv6_wait" -lt 10 ]; do
+    ipv6_source="$(ip -6 -o addr show dev "$dev" scope global 2>/dev/null | awk '$4 !~ /^(fc|fd)/ {sub(/\/.*/, "", $4); print $4; exit}')"
+    ipv6_gateway="$(ip -6 route show default dev "$dev" proto ra 2>/dev/null | awk '/^default via / {print $3; exit}')"
+    [ -n "$ipv6_source" ] && [ -n "$ipv6_gateway" ] && break
+    ipv6_wait=$((ipv6_wait + 1))
+    [ "$ipv6_wait" -lt 10 ] && sleep 1
+  done
   if [ -n "$ipv6_source" ] && [ -n "$ipv6_gateway" ]; then
     ip -6 rule add from "$ipv6_source" table "$table" 2>/dev/null || true
     ip -6 rule add oif "$dev" table "$table" 2>/dev/null || true
