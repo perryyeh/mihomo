@@ -4,7 +4,7 @@
 
 ## 角色
 
-- `config.host.yaml`：入站/中心端 `mihomoin` 风格配置。适用于 `network_mode: host`，接收分支站点的上游流量；不应启用透明 TUN 路由。
+- `config.host.yaml`：纯入站/回家端 `mihomoin` 配置。适用于 `network_mode: host`，接收分支站点流量后按宿主机所在局域网的正常路由直接出站；不启用透明 TUN 路由、DNS、代理节点、代理组或分流规则。
 - `config.macvlan.yaml`：出站/分支端 `mihomo` 风格配置。适用于 macvlan 部署，提供 DNS/Fake-IP/TUN 透明路由；非直连流量通过上游代理节点转发。
 
 ## Compose 模板
@@ -36,9 +36,9 @@
 - 不提交真实代理节点、UUID、密码、Token、面板密钥或站点专属凭据。
 - 真实节点定义与密钥只保存在本地部署文件中。
 
-## Fake-IP / `198.18.0.0/15` 说明
+## 分支端 Fake-IP 说明
 
-分支端 `config.macvlan.yaml` 使用 Fake-IP 实现透明路由。中心入站端 `config.host.yaml` 可能收到远端已解析为 `198.18.0.0/15` 的连接；这类地址是 Fake-IP 目标，不能走 `DIRECT`，应改为路由至选定的上游策略组。
+分支端 `config.macvlan.yaml` 使用 Fake-IP 实现透明路由。纯入站的 `config.host.yaml` 不维护 Fake-IP 映射，也不做二次代理或分流；回家流量由宿主机所在局域网的正常路由处理。
 
 分支端 IPv6 Fake-IP 中，`config.macvlan.yaml` 会启用 TUN IPv6 地址及 IPv6 Fake-IP 池：
 
@@ -60,7 +60,7 @@ Mihomo 会从 `2001:2:0:6152:0:9::/96` 生成 IPv6 Fake-IP 应答。周边路由
   - UDP 443 / QUIC 行为。
   - 规则适用范围内的 WebRTC / STUN / TURN 暴露。
   - 自身 DNS 上游，避免代理流量意外经本地 ISP DNS 解析。
-- DNS 可能返回 Fake-IP 时，Fake-IP CIDR 不能落入普通 `DIRECT`；应路由至预期的上游策略组。
+- 分支端 DNS 可能返回 Fake-IP 时，Fake-IP CIDR 不能落入普通 `DIRECT`；应路由至预期的上游策略组。
 
 ## 模板与运行态约定
 
@@ -81,7 +81,6 @@ Mihomo 会从 `2001:2:0:6152:0:9::/96` 生成 IPv6 Fake-IP 应答。周边路由
 
 ## 探测 URL 约定
 
-- `config.host.yaml` 的入站/中心端 fallback 探测应优先使用国内 URL：`http://connect.rom.miui.com/generate_204`。
 - `config.macvlan.yaml` 的出站/分支端 url-test 默认使用 `http://www.gstatic.com/generate_204`。
 - 例外：分支上游位于国内或集中部署在国内时，该分支应使用 MIUI URL。
 

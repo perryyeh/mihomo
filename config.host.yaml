@@ -17,7 +17,7 @@ geox-url:
   geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
   geosite: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
   mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
-mode: rule
+mode: direct
 unified-delay: true
 tcp-concurrent: true
 client-fingerprint: random
@@ -40,58 +40,3 @@ tun:
   enable: false
 dns:
   enable: false
-proxies:
-  - name: surge
-    type: socks5
-    server: 10.0.0.120
-    port: 6153
-    udp: true
-
-  - name: vless
-    type: vless
-    server: example.com
-    port: 443
-    uuid: CHANGE-ME
-    network: tcp
-    tls: true
-    udp: true
-proxy-groups:
-  - name: 🐟
-    type: fallback
-    interval: 60
-    # Inbound/central fallback probe: prefer a domestic URL.
-    url: http://connect.rom.miui.com/generate_204
-    proxies:
-      - surge
-      - vless
-
-  - name: GLOBAL
-    type: select
-    proxies:
-      - 🐟
-      - DIRECT
-rules:
-  # Branch fake-ip must be handled before private ULA rules.
-  - IP-CIDR,198.18.0.0/15,GLOBAL,no-resolve
-  - IP-CIDR6,2001:2:0:6152::/64,GLOBAL,no-resolve
-
-  # LAN / private / reserved
-  - DOMAIN-SUFFIX,local,DIRECT
-  - DOMAIN-SUFFIX,arpa,DIRECT
-  - IP-CIDR,127.0.0.0/8,DIRECT
-  - IP-CIDR,10.0.0.0/8,DIRECT
-  - IP-CIDR,172.16.0.0/12,DIRECT
-  - IP-CIDR,192.168.0.0/16,DIRECT
-  - IP-CIDR,100.64.0.0/10,DIRECT
-  - IP-CIDR,169.254.0.0/16,DIRECT
-  - IP-CIDR,224.0.0.0/4,DIRECT
-  - IP-CIDR6,::1/128,DIRECT
-  - IP-CIDR6,fc00::/7,DIRECT
-  - IP-CIDR6,fe80::/10,DIRECT
-  - IP-CIDR6,ff00::/8,DIRECT
-
-  # CN
-  - GEOIP,CN,DIRECT
-
-  # Others
-  - MATCH,GLOBAL
