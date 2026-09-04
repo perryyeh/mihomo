@@ -26,11 +26,29 @@ ensure_dependencies() {
     printf '%s\n' "❌ 订阅更新缺少工具：$missing；当前容器不支持 apk 安装。" >&2
     return 1
   fi
-  printf '%s\n' "ℹ️ 订阅更新正在安装缺少的容器工具：$missing" >&2
-  apk add --no-cache curl python3 py3-yaml || {
+
+  # Do not persistently replace Alpine repositories in the official image.
+  # A macvlan source network can reset one CDN while other mirrors work, so
+  # use an ephemeral repository file and try a small, known mirror set.
+  apk_repositories="$(mktemp)" || {
     printf '%s\n' "❌ 订阅更新依赖安装失败：$missing" >&2
     return 1
   }
+  printf '%s\n' "ℹ️ 订阅更新正在安装缺少的容器工具：$missing" >&2
+  for apk_mirror in \
+    https://dl-cdn.alpinelinux.org/alpine \
+    https://mirrors.aliyun.com/alpine \
+    https://mirrors.tencent.com/alpine \
+    https://mirror.nju.edu.cn/alpine; do
+    printf '%s/v3.24/main\n%s/v3.24/community\n' "$apk_mirror" "$apk_mirror" >"$apk_repositories"
+    if apk --repositories-file "$apk_repositories" add --no-cache curl python3 py3-yaml >/dev/null 2>&1; then
+      rm -f "$apk_repositories"
+      return 0
+    fi
+  done
+  rm -f "$apk_repositories"
+  printf '%s\n' "❌ 订阅更新依赖安装失败：$missing" >&2
+  return 1
 }
 
 ensure_dependencies || exit 1
