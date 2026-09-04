@@ -1,9 +1,6 @@
 services:
   mihomo:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: yehbp-mihomo:latest
+    image: metacubex/mihomo:latest
     entrypoint: ["/root/.config/mihomo/entrypoint.sh"]
     container_name: mihomo
     hostname: mihomo

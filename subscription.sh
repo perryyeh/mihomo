@@ -15,6 +15,26 @@ RELOAD_REQUEST="$APP_DIR/.subscription.reload.request"
 RELOAD_DONE="$APP_DIR/.subscription.reload.done"
 MODE="${1:---once}"
 
+ensure_dependencies() {
+  missing=""
+  command -v curl >/dev/null 2>&1 || missing="$missing curl"
+  command -v python3 >/dev/null 2>&1 || missing="$missing python3"
+  python3 -c 'import yaml' >/dev/null 2>&1 || missing="$missing py3-yaml"
+  [ -z "$missing" ] && return 0
+
+  if ! command -v apk >/dev/null 2>&1; then
+    printf '%s\n' "❌ 订阅更新缺少工具：$missing；当前容器不支持 apk 安装。" >&2
+    return 1
+  fi
+  printf '%s\n' "ℹ️ 订阅更新正在安装缺少的容器工具：$missing" >&2
+  apk add --no-cache curl python3 py3-yaml || {
+    printf '%s\n' "❌ 订阅更新依赖安装失败：$missing" >&2
+    return 1
+  }
+}
+
+ensure_dependencies || exit 1
+
 log_event() {
   message="$1"
   body="$(mktemp "$APP_DIR/.subscription-log.XXXXXX")"

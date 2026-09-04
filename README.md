@@ -12,7 +12,7 @@
 - `docker-compose.host.yml`：host 网络模式的 Compose 模板。
 - `docker-compose.macvlan.yml`：macvlan Compose 模板，使用 `${ipv4}`、`${ipv6}`、`${macaddress}` 与 `${MACVLAN}`。
 
-两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。`entrypoint.sh` 是稳定的 PID 1 加载器；可选行为均放在配置目录中的 `entrypoint.d/*.sh`，不会再修改 Compose 的 `entrypoint`。
+两个 Compose 模板都直接运行官方 `metacubex/mihomo:latest`，不构建本地派生镜像。`entrypoint.sh` 是稳定的 PID 1 加载器；可选行为均放在配置目录中的 `entrypoint.d/*.sh`，不会再修改 Compose 的 `entrypoint`。订阅更新实际执行时若缺少 `curl`、`python3` 或 `py3-yaml`，才在容器内通过 `apk` 安装。
 
 ### 可选启动模块
 
