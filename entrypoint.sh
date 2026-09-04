@@ -1,11 +1,10 @@
 #!/bin/sh
-# Container PID 1 for YehBP Mihomo. It owns the core process and the optional
-# full-configuration subscription schedule; no host timer is required.
+# Generic PID 1 for YehBP Mihomo. Optional behavior lives in entrypoint.d/.
 set -u
 
 APP_DIR=/root/.config/mihomo
-UPDATE_SCRIPT="$APP_DIR/subscription.sh"
-SUBSCRIPTION_CONF="$APP_DIR/subscription.conf"
+HOOK_DIR="$APP_DIR/entrypoint.d"
+ARGS_FILE="$APP_DIR/mihomo.args"
 RELOAD_REQUEST="$APP_DIR/.subscription.reload.request"
 RELOAD_DONE="$APP_DIR/.subscription.reload.done"
 CORE_PID=""
@@ -14,26 +13,31 @@ log() {
   printf '%s\n' "$*"
 }
 
-interval_seconds() {
-  local hours
-  [ -r "$SUBSCRIPTION_CONF" ] || return 1
-  hours="$(sed -n 's/^INTERVAL_HOURS=//p' "$SUBSCRIPTION_CONF" | sed -n '1p')"
-  # A missing/non-numeric value, or 0 and any negative value, disables the
-  # internal schedule. Manual updates still work through YehBP menu 21.
-  case "$hours" in
-    ''|*[!0-9]*) return 1 ;;
-  esac
-  [ "$hours" -lt 1 ] && return 1
-  printf '%s\n' "$((hours * 3600))"
+run_hooks() {
+  phase="$1"
+  status=0
+  for hook in "$HOOK_DIR"/*.sh; do
+    [ -x "$hook" ] || continue
+    if ! "$hook" "$phase"; then
+      log "⚠️ Mihomo hook 失败：$(basename "$hook")（阶段：$phase）"
+      status=1
+    fi
+  done
+  return "$status"
 }
 
-has_subscription() {
-  [ -r "$SUBSCRIPTION_CONF" ] && [ -x "$UPDATE_SCRIPT" ]
-}
-
-run_update() {
-  has_subscription || return 0
-  "$UPDATE_SCRIPT" --internal || log "⚠️ Mihomo 订阅更新失败；保留当前 config.yaml。"
+start_core() {
+  set -- /mihomo -d "$APP_DIR"
+  if [ -r "$ARGS_FILE" ]; then
+    while IFS= read -r arg || [ -n "$arg" ]; do
+      case "$arg" in
+        ''|\#*) continue ;;
+      esac
+      set -- "$@" "$arg"
+    done <"$ARGS_FILE"
+  fi
+  "$@" &
+  CORE_PID=$!
 }
 
 stop_core() {
@@ -43,11 +47,6 @@ stop_core() {
   CORE_PID=""
 }
 
-start_core() {
-  /mihomo -d "$APP_DIR" &
-  CORE_PID=$!
-}
-
 restart_core() {
   stop_core
   start_core
@@ -55,21 +54,20 @@ restart_core() {
 }
 
 shutdown() {
+  run_hooks stop || true
   stop_core
   exit 0
 }
 trap shutdown INT TERM
 
-# A configured subscription is refreshed before the initial core process is
-# started. No reload signal is needed in that case.
-if has_subscription; then
-  MIHOMO_SUPERVISOR_BOOT=1 run_update
-fi
+# Routing and other pre-start hooks run before the first core process starts.
+run_hooks pre-start || exit 1
 rm -f "$RELOAD_REQUEST"
 start_core
 : >"$RELOAD_DONE"
-next_update=0
+run_hooks post-start || true
 
+last_tick=0
 while :; do
   if ! kill -0 "$CORE_PID" 2>/dev/null; then
     wait "$CORE_PID" 2>/dev/null || true
@@ -82,15 +80,9 @@ while :; do
   fi
 
   now="$(date +%s)"
-  if interval="$(interval_seconds)"; then
-    if [ "$next_update" -eq 0 ]; then
-      next_update=$((now + interval))
-    elif [ "$now" -ge "$next_update" ]; then
-      run_update
-      next_update=$((now + interval))
-    fi
-  else
-    next_update=0
+  if [ $((now - last_tick)) -ge 60 ]; then
+    run_hooks tick || true
+    last_tick="$now"
   fi
   sleep 1
 done

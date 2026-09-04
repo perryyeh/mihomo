@@ -12,7 +12,15 @@
 - `docker-compose.host.yml`：host 网络模式的 Compose 模板。
 - `docker-compose.macvlan.yml`：macvlan Compose 模板，使用 `${ipv4}`、`${ipv6}`、`${macaddress}` 与 `${MACVLAN_NET}`。
 
-两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。`subscription.sh` 是与 `config.yaml` 平级、持续保留的订阅下载/校验/发布更新器；两个 Compose 模板均将 `entrypoint.sh` 注入为 PID 1，该脚本在存在 `subscription.conf` 时调用更新器并在容器内调度更新，不依赖宿主机 systemd/crond。
+两个 Compose 模板都会构建本地派生镜像：`Dockerfile` 基于 `metacubex/mihomo:latest`，仅添加容器内完整订阅更新所需的 `curl`、`python3` 和 `py3-yaml`。`entrypoint.sh` 是稳定的 PID 1 加载器；可选行为均放在配置目录中的 `entrypoint.d/*.sh`，不会再修改 Compose 的 `entrypoint`。
+
+### 可选启动模块
+
+- `entrypoint.d/10-network-policy.sh`：仅存在 `network-policy.conf` 时启用。每行格式为 `<IPv4 源地址> <IPv4 网关> <路由表号>`；脚本按源地址定位实际接口，建立 IPv4 策略路由，并在该接口同时具备公网 IPv6 与 RA 默认网关时建立对应 IPv6 策略路由。接口名、IPv6 地址和 RA 网关均在运行时发现。
+- `entrypoint.d/30-subscription-schedule.sh`：仅存在 `subscription.conf` 时启用。它调用同目录 `subscription.sh` 执行首次更新和周期更新；未配置订阅或间隔为 `0` 时不更新。
+- `mihomo.args`：可选，一行一个额外 Mihomo 参数。例如可保留自定义 `-post-up` 逻辑；文件不存在时仅运行 `/mihomo -d /root/.config/mihomo`。
+
+因此，单网卡、未配置订阅的部署不改路由、不执行订阅任务；多网卡策略和订阅调度均为独立可删的配置目录模块。
 
 ```yaml
 - /etc/localtime:/etc/localtime:ro
