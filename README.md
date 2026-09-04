@@ -16,11 +16,11 @@
 
 ### 可选启动模块
 
-- `entrypoint.d/10-network-policy.sh`：仅存在 `network-policy.conf` 时启用。每行格式为 `<IPv4 源地址> <IPv4 网关> <路由表号>`；脚本按源地址定位实际接口，建立 IPv4 策略路由，并在该接口同时具备公网 IPv6 与 RA 默认网关时建立对应 IPv6 策略路由。接口名、IPv6 地址和 RA 网关均在运行时发现。
+- `entrypoint.d/10-network-policy.sh`：读取同目录 `.env` 的 `ipv4/gateway`、`ipv42/gateway2`、`ipv43/gateway3`…；只有声明至少两张 macvlan 时才启用。脚本按 IPv4 地址定位实际接口，自动分配从 `101` 开始的路由表，建立 IPv4 源地址策略路由；接口存在公网 IPv6 与 RA 默认网关时，同时建立 IPv6 策略路由。第一张网络为主默认出口。
 - `entrypoint.d/30-subscription-schedule.sh`：仅存在 `subscription.conf` 时启用。它调用同目录 `subscription.sh` 执行首次更新和周期更新；未配置订阅或间隔为 `0` 时不更新。
 - `mihomo.args`：可选，一行一个额外 Mihomo 参数。例如可保留自定义 `-post-up` 逻辑；文件不存在时仅运行 `/mihomo -d /root/.config/mihomo`。
 
-因此，单网卡、未配置订阅的部署不改路由、不执行订阅任务；多网卡策略和订阅调度均为独立可删的配置目录模块。
+因此，单网卡、未配置订阅的部署不改路由、不执行订阅任务；多网卡策略由用户在 `.env` 与 Compose 中增加网络信息后自动处理，订阅调度为独立可删的配置目录模块。
 
 ```yaml
 - /etc/localtime:/etc/localtime:ro
