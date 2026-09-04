@@ -7,7 +7,7 @@ umask 077
 APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 CONFIG="$APP_DIR/config.yaml"
 BACKUP="$APP_DIR/config.macvlan.backup.yaml"
-REPLACE="$APP_DIR/config.replace.macvlan.yaml"
+REPLACE="$APP_DIR/subscription.macvlan.yaml"
 SUBSCRIPTION_CONF="$APP_DIR/subscription.conf"
 LOG_FILE="$APP_DIR/subscription.log"
 LOCK_DIR="$APP_DIR/.subscription.lock"
@@ -158,7 +158,7 @@ case "$TEMPLATE_MODE" in
 esac
 if [ "$APPLY_TEMPLATE" = 1 ]; then
   if [ "$TEMPLATE_MODE" = host ]; then
-    REPLACE="$APP_DIR/config.replace.host.yaml"
+    REPLACE="$APP_DIR/subscription.host.yaml"
   fi
   if [ ! -r "$REPLACE" ]; then
     log_event "失败：未找到 $REPLACE，拒绝覆盖当前配置。"
