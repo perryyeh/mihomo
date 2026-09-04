@@ -22,9 +22,22 @@ configured() {
 
 case "${1:-}" in
   pre-start)
-    configured || exit 0
-    MIHOMO_SUPERVISOR_BOOT=1 "$UPDATER" --internal || \
-      printf '%s\n' '⚠️ Mihomo 初始订阅更新失败；保留当前 config.yaml。' >&2
+    # The core must never wait for network I/O or apk installs.  A manual
+    # update is available from YehBP; scheduled work starts after one full
+    # interval once the core is already serving traffic.
+    exit 0
+    ;;
+  post-start)
+    configured || { rm -f "$STATE"; exit 0; }
+    interval="$(interval_seconds)" || { rm -f "$STATE"; exit 0; }
+    next="$(cat "$STATE" 2>/dev/null || true)"
+    case "$next" in
+      ''|*[!0-9]*)
+        now="$(date +%s)"
+        printf '%s\n' "$((now + interval))" >"$STATE"
+        chmod 0600 "$STATE"
+        ;;
+    esac
     exit 0
     ;;
   tick)
