@@ -16,10 +16,8 @@ RELOAD_DONE="$APP_DIR/.subscription.reload.done"
 MODE="${1:---once}"
 TLS_CONFIGURED=0
 TLS_ASSETS_READY=0
-CERT_STAGE=""
-KEY_STAGE=""
-CERT_CHANGED=0
-KEY_CHANGED=0
+TLS_STAGE_DIR=""
+TLS_CHANGED=0
 
 ensure_dependencies() {
   missing=""
@@ -109,7 +107,7 @@ PY
 
 cleanup() {
   status="${1:-$?}"
-  rm -f "${CERT_STAGE:-}" "${KEY_STAGE:-}" 2>/dev/null || true
+  rm -rf "${TLS_STAGE_DIR:-}" 2>/dev/null || true
   rm -rf "$LOCK_DIR" 2>/dev/null || true
   return "$status"
 }
@@ -133,74 +131,81 @@ request_reload() {
 CONFIG_CHANGED=0
 
 # A subscription may point TLS listener paths at arbitrary local locations.
-# For portable subscriptions, normalize only listener certificate fields to the
-# two fixed files beside config.yaml. The files themselves always come from the
-# subscription URL directory, never from the configured local path.
+# For portable subscriptions, ignore those directories: retain each basename,
+# download it from the subscription URL directory, and keep it beside config.
 prepare_tls_assets() {
   candidate="$1"
-  TLS_CONFIGURED="$(python3 - "$candidate" <<'PY'
-from pathlib import Path
+  assets="$(python3 - "$candidate" "$URL" <<'PY'
+from pathlib import Path, PurePosixPath
+from urllib.parse import quote, urljoin
 import sys, yaml
 path = Path(sys.argv[1])
+base = sys.argv[2]
 value = yaml.safe_load(path.read_text(encoding='utf-8'))
 if not isinstance(value, dict):
     raise SystemExit('订阅根节点必须是 YAML mapping。')
-found = False
+assets = []
+seen = set()
 for listener in value.get('listeners') or []:
     if not isinstance(listener, dict):
         continue
-    if 'certificate' in listener:
-        listener['certificate'] = './server.crt'
-        found = True
-    if 'private-key' in listener:
-        listener['private-key'] = './server.key'
-        found = True
-if found:
+    for field in ('certificate', 'private-key'):
+        if field not in listener:
+            continue
+        original = listener[field]
+        if not isinstance(original, str):
+            raise SystemExit(f'listeners.{field} 必须是字符串路径。')
+        name = PurePosixPath(original).name
+        if name in ('', '.', '..'):
+            raise SystemExit(f'listeners.{field} 缺少有效文件名。')
+        listener[field] = f'./{name}'
+        if name not in seen:
+            seen.add(name)
+            assets.append((name, urljoin(base, quote(name, safe=''))))
+if assets:
     path.write_text(yaml.safe_dump(value, allow_unicode=True, sort_keys=False, default_flow_style=False), encoding='utf-8')
-print(1 if found else 0)
+for name, url in assets:
+    print(f'{name}\t{url}')
 PY
 )" || {
     log_event "失败：订阅 TLS 字段解析失败，运行中的 config.yaml 未修改。"
     return 1
   }
-  [ "$TLS_CONFIGURED" = 1 ] || return 0
+  [ -n "$assets" ] || return 0
+  TLS_CONFIGURED=1
+  TLS_STAGE_DIR="$(mktemp -d "$APP_DIR/.subscription-tls.XXXXXX")" || return 1
 
-  urls="$(python3 - "$URL" <<'PY'
-from urllib.parse import urljoin
-import sys
-base = sys.argv[1]
-print(urljoin(base, 'server.crt'))
-print(urljoin(base, 'server.key'))
-PY
-)" || return 1
-  cert_url="$(printf '%s\n' "$urls" | sed -n '1p')"
-  key_url="$(printf '%s\n' "$urls" | sed -n '2p')"
-  CERT_STAGE="$(mktemp "$APP_DIR/.subscription-cert.XXXXXX")" || return 1
-  KEY_STAGE="$(mktemp "$APP_DIR/.subscription-key.XXXXXX")" || {
-    rm -f "$CERT_STAGE"
-    CERT_STAGE=""
-    return 1
-  }
+  while IFS="$(printf '\t')" read -r name asset_url; do
+    [ -n "$name" ] || continue
+    if ! curl --connect-timeout 15 --max-time 120 --fail --location --silent --show-error "$asset_url" -o "$TLS_STAGE_DIR/$name" || \
+       [ ! -s "$TLS_STAGE_DIR/$name" ]; then
+      rm -rf "$TLS_STAGE_DIR"
+      TLS_STAGE_DIR=""
+      log_event "警告：订阅声明了 TLS 文件，但下载失败；已跳过 TLS 文件下载。"
+      return 0
+    fi
+  done <<EOF
+$assets
+EOF
 
-  if ! curl --connect-timeout 15 --max-time 120 --fail --location --silent --show-error "$cert_url" -o "$CERT_STAGE" || \
-     ! curl --connect-timeout 15 --max-time 120 --fail --location --silent --show-error "$key_url" -o "$KEY_STAGE" || \
-     [ ! -s "$CERT_STAGE" ] || [ ! -s "$KEY_STAGE" ]; then
-    rm -f "$CERT_STAGE" "$KEY_STAGE"
-    CERT_STAGE=""
-    KEY_STAGE=""
-    log_event "警告：订阅声明了 TLS 证书，但 server.crt 或 server.key 下载失败；已跳过证书下载。"
-    return 0
-  fi
-  if ! python3 - "$CERT_STAGE" "$KEY_STAGE" <<'PY'
-import ssl, sys
-context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-context.load_cert_chain(sys.argv[1], sys.argv[2])
+  # Validate every certificate/key pair after their paths were normalized.
+  if ! python3 - "$candidate" "$TLS_STAGE_DIR" <<'PY'
+from pathlib import Path
+import ssl, sys, yaml
+config, directory = map(Path, sys.argv[1:])
+value = yaml.safe_load(config.read_text(encoding='utf-8'))
+for listener in value.get('listeners') or []:
+    if not isinstance(listener, dict):
+        continue
+    cert, key = listener.get('certificate'), listener.get('private-key')
+    if cert is not None and key is not None:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(directory / Path(cert).name, directory / Path(key).name)
 PY
   then
-    rm -f "$CERT_STAGE" "$KEY_STAGE"
-    CERT_STAGE=""
-    KEY_STAGE=""
-    log_event "警告：下载的 server.crt/server.key 无效或不匹配；已跳过证书下载。"
+    rm -rf "$TLS_STAGE_DIR"
+    TLS_STAGE_DIR=""
+    log_event "警告：下载的 TLS 文件无效或证书私钥不匹配；已跳过 TLS 文件下载。"
     return 0
   fi
   TLS_ASSETS_READY=1
@@ -214,23 +219,25 @@ validate_and_publish() {
   fi
 
   if [ "$TLS_ASSETS_READY" = 1 ]; then
-    cmp -s "$CERT_STAGE" "$APP_DIR/server.crt" || CERT_CHANGED=1
-    cmp -s "$KEY_STAGE" "$APP_DIR/server.key" || KEY_CHANGED=1
+    for staged in "$TLS_STAGE_DIR"/*; do
+      [ -f "$staged" ] || continue
+      cmp -s "$staged" "$APP_DIR/$(basename "$staged")" || TLS_CHANGED=1
+    done
   fi
-  if cmp -s "$candidate" "$CONFIG" && [ "$CERT_CHANGED" -eq 0 ] && [ "$KEY_CHANGED" -eq 0 ]; then
-    log_event "完成：订阅有效，但生成配置和 TLS 证书均未变化，无需重载 Mihomo。"
+  if cmp -s "$candidate" "$CONFIG" && [ "$TLS_CHANGED" -eq 0 ]; then
+    log_event "完成：订阅有效，但生成配置和 TLS 文件均未变化，无需重载 Mihomo。"
     return 0
   fi
 
-  if [ "$CERT_CHANGED" -eq 1 ]; then
-    mv "$CERT_STAGE" "$APP_DIR/server.crt"
-    CERT_STAGE=""
-    chmod 0600 "$APP_DIR/server.crt"
-  fi
-  if [ "$KEY_CHANGED" -eq 1 ]; then
-    mv "$KEY_STAGE" "$APP_DIR/server.key"
-    KEY_STAGE=""
-    chmod 0600 "$APP_DIR/server.key"
+  if [ "$TLS_CHANGED" -eq 1 ]; then
+    for staged in "$TLS_STAGE_DIR"/*; do
+      [ -f "$staged" ] || continue
+      target="$APP_DIR/$(basename "$staged")"
+      if ! cmp -s "$staged" "$target"; then
+        mv "$staged" "$target"
+        chmod 0600 "$target"
+      fi
+    done
   fi
   if ! cmp -s "$candidate" "$CONFIG"; then
     mv "$candidate" "$CONFIG"
@@ -238,8 +245,8 @@ validate_and_publish() {
     CONFIG_CHANGED=1
   fi
 
-  if [ "$CERT_CHANGED" -eq 1 ] || [ "$KEY_CHANGED" -eq 1 ]; then
-    log_event "完成：订阅有效，已更新同目录 TLS 证书并请求重启 Mihomo 核心。"
+  if [ "$TLS_CHANGED" -eq 1 ]; then
+    log_event "完成：订阅有效，已更新同目录 TLS 文件并请求重启 Mihomo 核心。"
   else
     log_event "完成：订阅有效，已替换 config.yaml 并请求重载 Mihomo。"
   fi

@@ -17,7 +17,7 @@
 ### 可选启动模块
 
 - `entrypoint.d/10-network-policy.sh`：读取同目录 `.env` 的 `ipv4/gateway`、`ipv42/gateway2`、`ipv43/gateway3`…；只有声明至少两张 macvlan 时才启用。脚本按 IPv4 地址定位实际接口，自动分配从 `101` 开始的路由表，建立 IPv4 源地址策略路由；接口存在公网 IPv6 与 RA 默认网关时，同时建立 IPv6 策略路由。第一张网络为主默认出口。
-- `entrypoint.d/30-subscription-schedule.sh`：仅存在 `subscription.conf` 且更新间隔至少为 1 小时时启用。Mihomo 首先启动并监听服务，随后异步调用同目录 `subscription.sh` 执行一次更新，再按周期更新。订阅下载、`apk` 依赖安装或网络失败都不会阻塞 Mihomo 启动；间隔为 `0` 时关闭自动刷新，可从 YehBP 手动更新。订阅的 `listeners` 含 `certificate` 或 `private-key` 时，更新器固定从订阅 URL 同目录下载 `server.crt` 和 `server.key`，保存到配置目录，并将监听器路径规范为 `./server.crt`、`./server.key`；下载失败时保留本地证书但仍规范化订阅配置路径。
+- `entrypoint.d/30-subscription-schedule.sh`：仅存在 `subscription.conf` 且更新间隔至少为 1 小时时启用。Mihomo 首先启动并监听服务，随后异步调用同目录 `subscription.sh` 执行一次更新，再按周期更新。订阅下载、`apk` 依赖安装或网络失败都不会阻塞 Mihomo 启动；间隔为 `0` 时关闭自动刷新，可从 YehBP 手动更新。订阅的 `listeners` 含 `certificate` 或 `private-key` 时，更新器忽略字段路径中的目录，保留文件名与后缀，并从订阅 URL 同目录下载同名文件到配置目录；字段随后规范为 `./<原文件名>`。下载失败时保留本地文件但仍规范化订阅配置路径。
 - `mihomo.args`：可选，一行一个额外 Mihomo 参数。例如可保留自定义 `-post-up` 逻辑；文件不存在时仅运行 `/mihomo -d /root/.config/mihomo`。
 
 因此，单网卡、未配置订阅的部署不改路由、不执行订阅任务；多网卡策略由用户在 `.env` 与 Compose 中增加网络信息后自动处理，订阅调度为独立可删的配置目录模块。
