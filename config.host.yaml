@@ -28,8 +28,8 @@ listeners:
     port: 14444
     listen: 0.0.0.0
     password: CHANGE-ME
-    certificate: ./speedtest.net.crt
-    private-key: ./speedtest.net.key
+    certificate: ./server.crt
+    private-key: ./server.key
 
   - name: ss-in
     type: shadowsocks
@@ -45,8 +45,8 @@ listeners:
     listen: 0.0.0.0
     users:
       - uuid: 00000000-0000-0000-0000-000000000000 # CHANGE-ME
-    certificate: ./speedtest.net.crt
-    private-key: ./speedtest.net.key
+    certificate: ./server.crt
+    private-key: ./server.key
 tun:
   enable: false
 dns:
