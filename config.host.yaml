@@ -25,9 +25,11 @@ mixed-port: 7890 # HTTP(S) 和 SOCKS5 代理混合端口
 listeners:
   - name: anytls-in
     type: anytls
-    port: 14443
+    port: 14444
     listen: 0.0.0.0
     password: CHANGE-ME
+    certificate: ./speedtest.net.crt
+    private-key: ./speedtest.net.key
 
   - name: ss-in
     type: shadowsocks
@@ -36,6 +38,15 @@ listeners:
     cipher: chacha20-ietf-poly1305
     password: CHANGE-ME
     udp: true
+
+  - name: vless-in
+    type: vless
+    port: 14443
+    listen: 0.0.0.0
+    users:
+      - uuid: 00000000-0000-0000-0000-000000000000 # CHANGE-ME
+    certificate: ./speedtest.net.crt
+    private-key: ./speedtest.net.key
 tun:
   enable: false
 dns:
