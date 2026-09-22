@@ -1,4 +1,4 @@
-secret: 'admin' # CHANGE-ME: api访问密码
+secret: 'admin' # 默认 API 密码；生产环境必须修改
 log-level: info
 bind-address: "*"
 allow-lan: true
@@ -40,9 +40,10 @@ dns:
   fake-ip-range6: 2001:2:0:6152:0:9::/96 #IPv6 fake-ip池
   respect-rules: true
   default-nameserver:
-    - tls://223.5.5.5:853
-    - tls://1.12.12.12:853
-    - 10.0.0.1
+    - 223.5.5.5
+    - 119.29.29.29
+    - "2400:3200::1"
+    - "2402:4e00::"
   nameserver:
     - https://cloudflare-dns.com/dns-query
     - https://dns.google/dns-query
@@ -57,8 +58,20 @@ proxies:
   - name: upstream-anytls
     type: anytls
     server: example.com
+    port: 14444
+    password: admin # 默认示例密码；生产环境必须修改
+    sni: speedtest.net # 与仓库 server.crt 的 SAN 一致
+    skip-cert-verify: true # 仅为仓库自签名测试证书；替换受信任证书后设为 false 或删除
+    udp: true
+
+  - name: upstream-vless
+    type: vless
+    server: example.com
     port: 14443
-    password: CHANGE-ME
+    uuid: 00000000-0000-0000-0000-000000000000 # 示例 UUID；生产环境必须替换
+    tls: true
+    servername: speedtest.net # 与仓库 server.crt 的 SAN 一致
+    skip-cert-verify: true # 仅为仓库自签名测试证书；替换受信任证书后设为 false 或删除
     udp: true
 
   - name: upstream-ss
@@ -66,7 +79,7 @@ proxies:
     server: example.com
     port: 14445
     cipher: chacha20-ietf-poly1305
-    password: CHANGE-ME
+    password: admin # 默认示例密码；生产环境必须修改
     udp: true
 proxy-groups:
   - name: 🐟 漏网之鱼
@@ -77,6 +90,7 @@ proxy-groups:
     url: http://www.gstatic.com/generate_204
     proxies:
       - upstream-anytls
+      - upstream-vless
       - upstream-ss
 
   - name: GLOBAL

@@ -1,4 +1,4 @@
-secret: 'admin' # CHANGE-ME: api访问密码
+secret: 'admin' # 默认 API 密码；生产环境必须修改
 log-level: debug
 bind-address: "*"
 allow-lan: true
@@ -27,7 +27,7 @@ listeners:
     type: anytls
     port: 14444
     listen: 0.0.0.0
-    password: CHANGE-ME
+    password: admin # 默认示例密码；生产环境必须修改
     certificate: ./server.crt
     private-key: ./server.key
 
@@ -36,7 +36,7 @@ listeners:
     port: 14445
     listen: 0.0.0.0
     cipher: chacha20-ietf-poly1305
-    password: CHANGE-ME
+    password: admin # 默认示例密码；生产环境必须修改
     udp: true
 
   - name: vless-in
@@ -44,7 +44,7 @@ listeners:
     port: 14443
     listen: 0.0.0.0
     users:
-      - uuid: 00000000-0000-0000-0000-000000000000 # CHANGE-ME
+      - uuid: 00000000-0000-0000-0000-000000000000 # 示例 UUID；生产环境必须替换
     certificate: ./server.crt
     private-key: ./server.key
 tun:

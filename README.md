@@ -7,7 +7,7 @@
 - `config.host.yaml`：纯入站/回家端 `mihomoin` 配置。适用于 `network_mode: host`，接收分支站点流量后按宿主机所在局域网的正常路由直接出站；不启用透明 TUN 路由、DNS、代理节点、代理组或分流规则。
 - `config.macvlan.yaml`：出站/分支端 `mihomo` 风格配置。适用于 macvlan 部署，提供 DNS/Fake-IP/TUN 透明路由；非直连流量通过上游代理节点转发。
 
-`config.host.yaml` 的 AnyTLS（TCP `14444`）和 VLESS/TLS（TCP `14443`）共用仓库内仅供模板和测试的自签名 `server.crt` / `server.key`，其 SAN 为 `speedtest.net`；该证书不受该域名信任，部署前必须替换为自行持有且由客户端信任的证书和私钥，并替换 VLESS UUID。
+`config.host.yaml` 的 AnyTLS（TCP `14444`）和 VLESS/TLS（TCP `14443`）共用仓库内仅供模板和测试的自签名 `server.crt` / `server.key`，其 SAN 为 `speedtest.net`。`config.macvlan.yaml` 的对应出站示例使用相同端口和 SNI，并仅为该自签名证书设 `skip-cert-verify: true`；部署前必须替换为自行持有且由客户端信任的证书和私钥，随后删除该跳过校验项或设为 `false`，并替换 VLESS UUID 及全部默认 `admin` 密码。
 
 ## Compose 模板
 
