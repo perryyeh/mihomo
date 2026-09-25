@@ -104,7 +104,7 @@ rules:
 
   # Branch fake-ip must be handled before private/reserved rules.
   - IP-CIDR,198.18.0.0/15,GLOBAL,no-resolve
-  - IP-CIDR6,2001:2:0:6152::/64,GLOBAL,no-resolve
+  - IP-CIDR6,2001:2:0:6152:0:9::/96,GLOBAL,no-resolve
 
   # LAN / private / reserved
   - DOMAIN-SUFFIX,local,DIRECT
@@ -122,6 +122,7 @@ rules:
   - IP-CIDR6,ff00::/8,DIRECT
 
   # CN
+  - GEOSITE,cn,DIRECT
   - GEOIP,CN,DIRECT
 
   # Others
