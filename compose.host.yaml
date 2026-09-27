@@ -8,8 +8,6 @@ services:
     restart: always
     cap_add:
       - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
     environment:
       TZ: Asia/Singapore
     volumes:
