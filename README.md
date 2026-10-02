@@ -29,6 +29,14 @@
 - /etc/timezone:/etc/timezone:ro
 ```
 
+## 订阅更新与备份
+
+- 下载到临时文件，并先由 Mihomo 校验。下载失败、校验失败或配置未变化时，不覆盖当前配置及上一版备份。
+- 新配置确实有变化时，先将当前 `config.yaml` 原子保存为 `config.previous.yaml`（权限 `0600`），再替换配置并请求重载；每次更新都会创建或覆盖这一份上一版备份。备份保存失败则取消发布。
+- `config.macvlan.backup.yaml` 是首次配置订阅时保存的原始恢复副本，仅 `--restore` 依赖它。正常更新不要求它存在，也不会覆盖或自动重建它。
+- `config.previous.yaml` 仅备份 YAML，不包含 TLS 文件历史；不能将它当作证书与私钥的完整回滚包。
+- 本地回归测试：`MIHOMO_TEST_BINARY=/path/to/mihomo python3 -m unittest discover -s tests -v`。测试使用本地 HTTP 订阅样本与真实 Mihomo 校验器。
+
 ## 部署约定
 
 - 不提交运行环境生成的 `config.yaml`。

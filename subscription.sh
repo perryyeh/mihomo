@@ -6,7 +6,10 @@ umask 077
 
 APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 CONFIG="$APP_DIR/config.yaml"
+# Original pre-subscription config, used only by --restore.
 BACKUP="$APP_DIR/config.macvlan.backup.yaml"
+# Rolling config snapshot, refreshed only before publishing a changed config.
+PREVIOUS="$APP_DIR/config.previous.yaml"
 REPLACE="$APP_DIR/subscription.macvlan.yaml"
 SUBSCRIPTION_CONF="$APP_DIR/subscription.conf"
 LOG_FILE="$APP_DIR/subscription.log"
@@ -229,6 +232,25 @@ validate_and_publish() {
     return 0
   fi
 
+  # Save the last running config before publishing either config or TLS changes.
+  # Never rewrite the original pre-subscription restore point.
+  if ! cmp -s "$candidate" "$CONFIG"; then
+    if [ -L "$PREVIOUS" ] || { [ -e "$PREVIOUS" ] && [ ! -f "$PREVIOUS" ]; }; then
+      log_event "失败：上一版备份路径不是普通文件，当前配置及 TLS 文件未修改。"
+      return 1
+    fi
+    previous_tmp="$(mktemp "$APP_DIR/.subscription-previous.XXXXXX")" || {
+      log_event "失败：无法创建上一版配置备份，当前配置及 TLS 文件未修改。"
+      return 1
+    }
+    if ! cp "$CONFIG" "$previous_tmp" || ! chmod 0600 "$previous_tmp" || \
+       ! mv -f "$previous_tmp" "$PREVIOUS"; then
+      rm -f "$previous_tmp"
+      log_event "失败：无法保存上一版配置备份，当前配置及 TLS 文件未修改。"
+      return 1
+    fi
+  fi
+
   if [ "$TLS_CHANGED" -eq 1 ]; then
     for staged in "$TLS_STAGE_DIR"/*; do
       [ -f "$staged" ] || continue
@@ -315,11 +337,6 @@ if [ "$APPLY_TEMPLATE" = 1 ]; then
     exit 1
   fi
 fi
-if [ ! -r "$BACKUP" ]; then
-  log_event "失败：未找到 config.macvlan.backup.yaml，拒绝覆盖当前配置。"
-  exit 1
-fi
-
 raw="$(mktemp "$APP_DIR/.subscription-download.XXXXXX")"
 candidate="$(mktemp "$APP_DIR/.subscription-candidate.XXXXXX")"
 trap 'status=$?; rm -f "$raw" "$candidate"; cleanup "$status"' 0 1 2 15
